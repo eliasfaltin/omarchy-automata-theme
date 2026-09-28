@@ -71,7 +71,11 @@ apply() {
 watch() {
   local sock="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/hypr/${HYPRLAND_INSTANCE_SIGNATURE:-}/.socket2.sock"
   exec 9>"${XDG_RUNTIME_DIR:-/tmp}/automata-aspect.lock"
-  flock -n 9 || exit 0
+  # Wait briefly: a watcher being replaced may still hold the lock.
+  flock -w 5 9 || exit 0
+  # Take the poller and the socket reader down with this process.
+  trap 'exit 0' TERM INT
+  trap 'kill 0 2>/dev/null' EXIT
   apply
   # A background picked in the switcher is always the 16:9 file. Poll the
   # link so it moves to the 3:2 render within two seconds.

@@ -64,7 +64,10 @@ if ((WANT_3X2)); then
   fi
 fi
 
-pkill -f '^/bin/bash .*/automata-aspect watch$' 2>/dev/null || true
+for pid in $(pgrep -f '^/bin/bash .*/automata-aspect watch$'); do
+  pkill -P "$pid" 2>/dev/null || true
+  kill "$pid" 2>/dev/null || true
+done
 setsid -f "$BIN/automata-aspect" watch >/dev/null 2>&1
 "$BIN/automata-aspect" apply
 echo "Done."
