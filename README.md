@@ -3,8 +3,8 @@
 Two [Omarchy](https://omarchy.org/) themes, dark (this repo) and
 [light](https://github.com/eliasfaltin/omarchy-automata-light-theme), with six
 generated backgrounds. Each background is an automaton you can watch: a
-cellular automaton, a clock escapement, Conway's Game of Life, the ash a
-random Life soup leaves behind. Every one
+cellular automaton, a clock escapement, Conway's Game of Life, a colony of
+glider guns. Every one
 ships as a still, a seamless loop, and a one-shot intro that plays at login.
 
 | Automata (dark) | Automata Light |
@@ -29,36 +29,31 @@ This project takes that palette to the whole desktop:
 
 ## Backgrounds
 
-All six are rendered from code in [`src/`](src/). The previews below are
-small WebP clips of the loops; the real files are 3840x2160 (16:9) and
-3240x2160 (3:2), H.264.
+All six are rendered from code in [`src/`](src/). The previews are small
+WebP clips; the real files are 3840x2160 (16:9) and 3240x2160 (3:2), H.264.
+The loop runs while the background is visible. The intro plays once at login
+and ends on the loop's first frame.
 
-| | Loop | What it is |
+| Background | Loop | Intro |
 | --- | --- | --- |
-| 1 | ![Rule 110 loop](media/loop-1-rule-110-dark.webp) | **Rule 110.** An elementary cellular automaton, computed row by row. The loop sweeps a read head over the 126 generations. 12 s. |
-| 2 | ![Escapement loop](media/loop-2-escapement-dark.webp) | **Escapement.** A Swiss lever escapement and gear train. It ticks once per second; every wheel turns a whole number of spoke periods per minute. 60 s. |
-| 3 | ![Life loop](media/loop-3-life-dark.webp) | **Life.** A Gosper glider gun feeds an eater beside a catalogue of oscillators and still lifes. The universe repeats every 30 generations. 15 s. |
-| 4 | ![Cyclic loop](media/loop-4-cyclic-dark.webp) | **Cyclic.** Griffeath's cyclic cellular automaton (8 states, radius 2, threshold 3). Noise organises into spiral waves that repeat every 8 generations. No text. 8 s. |
-| 5 | ![Gears loop](media/loop-5-gears-dark.webp) | **Gears.** A lattice of large and small gears; every neighbour pair meshes. No text. 30 s. |
-| 6 | ![Ash loop](media/loop-6-ash-dark.webp) | **Ash.** A random Game of Life soup, run until only its ash is left: blocks, beehives, boats and blinkers, scattered in clusters. Oscillators are drawn brighter than the debris. No text. 8 s. |
+| **1 · Rule 110.** An elementary cellular automaton, computed row by row. The loop sweeps a read head over the generations. 12 s. | ![Rule 110 loop](media/loop-1-rule-110-dark.webp) | ![Rule 110 intro](media/intro-1-rule-110-dark.webp) |
+| **2 · Escapement.** A Swiss lever escapement and gear train. It ticks once per second; every wheel turns a whole number of spoke periods per minute. 60 s. | ![Escapement loop](media/loop-2-escapement-dark.webp) | ![Escapement intro](media/intro-2-escapement-dark.webp) |
+| **3 · Life.** A Gosper glider gun feeds an eater beside a catalogue of oscillators and still lifes. The universe repeats every 30 generations. 15 s. | ![Life loop](media/loop-3-life-dark.webp) | ![Life intro](media/intro-3-life-dark.webp) |
+| **4 · Cyclic.** Griffeath's cyclic cellular automaton (8 states, radius 2, threshold 3). Noise organises into spiral waves that glide at a constant pace. No text. 8 s. | ![Cyclic loop](media/loop-4-cyclic-dark.webp) | ![Cyclic intro](media/intro-4-cyclic-dark.webp) |
+| **5 · Gears.** A lattice of large and small gears; every neighbour pair meshes. No text. 30 s. | ![Gears loop](media/loop-5-gears-dark.webp) | ![Gears intro](media/intro-5-gears-dark.webp) |
+| **6 · Colony.** Ten glider guns in random orientations fire streams of gliders across the screen into eaters, between clusters of oscillators and still lifes. Moving cells are brighter. No text. 12 s. | ![Colony loop](media/loop-6-colony-dark.webp) | ![Colony intro](media/intro-6-colony-dark.webp) |
 
-Light versions of all six ship with Automata Light. Stills:
+Automata Light carries the same six in charcoal on parchment; see its
+[README](https://github.com/eliasfaltin/omarchy-automata-light-theme) for
+light previews.
 
 | | | |
 | --- | --- | --- |
 | ![](media/still-1-rule-110-light.jpg) | ![](media/still-2-escapement-light.jpg) | ![](media/still-3-life-light.jpg) |
-| ![](media/still-4-cyclic-light.jpg) | ![](media/still-5-gears-light.jpg) | ![](media/still-6-ash-light.jpg) |
+| ![](media/still-4-cyclic-light.jpg) | ![](media/still-5-gears-light.jpg) | ![](media/still-6-colony-light.jpg) |
 
-### Intros
-
-At login, the current background builds itself before it settles:
-
-| Rule 110 | Cyclic | Ash |
-| --- | --- | --- |
-| ![Rule 110 intro](media/intro-1-rule-110-dark.webp) | ![Cyclic intro](media/intro-4-cyclic-dark.webp) | ![Ash intro](media/intro-6-ash-dark.webp) |
-
-The still, the last intro frame and the first loop frame are the same image,
-pixel for pixel. The handover between them has no visible cut.
+The still, the intro's last frame and the loop's first frame are the same
+image, pixel for pixel, so the handover between them has no visible cut.
 
 ## How it works
 
@@ -138,8 +133,7 @@ python3 rule110.py preview 3.0 intro                            # one frame to s
 Every loop is exact, not cross-faded:
 
 - the gear trains turn a whole number of spoke periods per loop;
-- the Game of Life patterns are periodic, and the ash is simulated until the
-  whole board repeats;
+- the Game of Life boards are simulated until they repeat exactly;
 - the cyclic automaton is simulated until it repeats.
 
 ## License
