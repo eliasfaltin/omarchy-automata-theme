@@ -1,0 +1,3 @@
+src/preview/
+__pycache__/
+*.pyc

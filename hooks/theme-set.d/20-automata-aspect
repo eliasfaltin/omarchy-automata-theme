@@ -1,0 +1,4 @@
+#!/bin/bash
+# Automata themes: use the background layout that fits the main display.
+[[ ${1:-} == automata || ${1:-} == automata-light ]] && automata-aspect apply
+exit 0

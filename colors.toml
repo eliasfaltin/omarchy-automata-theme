@@ -1,0 +1,39 @@
+# Automata — dark variant of the "NieR: Automata" palette from t3themes.com
+# (https://t3themes.com/themes/nier-automata/). Charcoal paper, parchment ink,
+# monochrome accent. Surface and text values are lifted from the t3 dark
+# variant; ANSI hues are low-chroma so nothing competes with the ink.
+
+mode = "dark"
+
+accent = "#d1cdb7"
+selection = "#45433a"
+muted = "#6f6c5e"
+
+hyprland_active_border = "#d1cdb7"
+hyprland_inactive_border = "rgba(4f4d45aa)"
+
+background = "#2b2923"
+dark_background = "#282620"
+darker_background = "#211f1b"
+lighter_background = "#36342c"
+
+foreground = "#d1cdb7"
+dark_foreground = "#a8a593"
+light_foreground = "#ccc8b1"
+bright_foreground = "#dcd8c2"
+
+red = "#c96b57"
+yellow = "#c2b169"
+orange = "#c98a5e"
+green = "#9da67a"
+cyan = "#8fa99f"
+blue = "#8b9bab"
+magenta = "#ab8e96"
+brown = "#8c7556"
+
+bright_red = "#d98a77"
+bright_yellow = "#d3c47e"
+bright_green = "#b3bb90"
+bright_cyan = "#a9c0b6"
+bright_blue = "#a6b4c2"
+bright_magenta = "#c0a6ad"

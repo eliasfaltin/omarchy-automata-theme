@@ -1,0 +1,97 @@
+#!/bin/bash
+# Match the Automata background to the shape of the main display.
+#
+# The installed theme carries every background in 16:9. automata-setup adds
+# 3:2 renders to ~/.local/share/automata/variants/3x2/ (light-3x2/ for the
+# light theme). `apply` links the current background to the render that fits
+# the largest enabled monitor. `watch` re-applies on monitor changes and when
+# a background is picked in the switcher.
+#
+# Usage: automata-aspect apply | watch | current
+
+set -u
+
+VARIANTS="$HOME/.local/share/automata/variants"
+STATE="$HOME/.local/state/omarchy/current"
+LINK="$STATE/background"
+THEME="$STATE/theme"
+LIVE="$THEME/backgrounds"
+
+prefix() {
+  case $(cat "$STATE/theme.name" 2>/dev/null) in
+    automata) echo "" ;;
+    automata-light) echo "light-" ;;
+    *) return 1 ;;
+  esac
+}
+
+current() {
+  # AUTOMATA_ASPECT=16x9|3x2 forces a layout.
+  if [[ -n ${AUTOMATA_ASPECT:-} ]]; then
+    echo "$AUTOMATA_ASPECT"
+    return
+  fi
+  # Rotated monitors swap width and height. Anything narrower than 1.7:1
+  # (3:2, 16:10, portrait) gets the 3:2 layout.
+  hyprctl monitors -j 2>/dev/null | jq -r '
+    map(if (.transform % 2) == 1 then {w: .height, h: .width} else {w: .width, h: .height} end)
+    | max_by(.w * .h) // empty
+    | if (.w / .h) >= 1.7 then "16x9" else "3x2" end'
+}
+
+# Path of a background file in the given layout, or empty.
+locate() {
+  local name="$1" aspect="$2" pre="$3"
+  if [[ $aspect == 3x2 && -f $VARIANTS/${pre}3x2/$name ]]; then
+    echo "$VARIANTS/${pre}3x2/$name"
+  elif [[ -f $LIVE/$name ]]; then
+    echo "$LIVE/$name"
+  fi
+}
+
+apply() {
+  local pre aspect resolved name want
+  pre=$(prefix) || return 0
+  resolved=$(readlink -f "$LINK" 2>/dev/null)
+  case $resolved in
+    "$LIVE"/* | "$VARIANTS"/*) ;;
+    *) return 0 ;;
+  esac
+  name=${resolved##*/}
+  # automata-intro owns the background while an intro plays.
+  [[ $name == blank.png ]] && return 0
+  aspect=$(current)
+  [[ -n $aspect ]] || return 0
+  want=$(locate "$name" "$aspect" "$pre")
+  [[ -n $want && $want != "$resolved" ]] || return 0
+  ln -nsf "$want" "$LINK"
+  omarchy-shell -q background set "$want" >/dev/null 2>&1 || true
+}
+
+watch() {
+  local sock="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/hypr/${HYPRLAND_INSTANCE_SIGNATURE:-}/.socket2.sock"
+  exec 9>"${XDG_RUNTIME_DIR:-/tmp}/automata-aspect.lock"
+  flock -n 9 || exit 0
+  apply
+  # A background picked in the switcher is always the 16:9 file. Poll the
+  # link so it moves to the 3:2 render within two seconds.
+  (while sleep 2; do apply; done) &
+  while [[ -S $sock ]]; do
+    socat -U - "UNIX-CONNECT:$sock" 2>/dev/null | while IFS= read -r line; do
+      case $line in
+        monitoradded* | monitorremoved* | configreloaded*)
+          sleep 0.6
+          apply
+          ;;
+      esac
+    done
+    sleep 1
+  done
+}
+
+case "${1:-apply}" in
+  apply) apply ;;
+  watch) watch ;;
+  current) current ;;
+  *) echo "Usage: automata-aspect apply | watch | current" >&2; exit 1 ;;
+esac

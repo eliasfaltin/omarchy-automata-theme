@@ -1,0 +1,33 @@
+#!/bin/bash
+# Switch the current Automata background between its still and its loop.
+#
+# Usage: automata-bg loop | still | toggle | intro
+
+set -u
+
+LINK="$HOME/.local/state/omarchy/current/background"
+
+resolved=$(readlink -f "$LINK" 2>/dev/null)
+dir=${resolved%/*}
+name=${resolved##*/}
+stem=${name%.*}
+stem=${stem#loop-}
+still="$dir/$stem.png"
+loop="$dir/loop-$stem.mp4"
+
+if [[ ! -f $still || ! -f $loop ]]; then
+  echo "automata-bg: the current background has no still/loop pair" >&2
+  exit 1
+fi
+
+case "${1:-toggle}" in
+  loop) want=$loop ;;
+  still) want=$still ;;
+  toggle) [[ $name == loop-* ]] && want=$still || want=$loop ;;
+  intro) exec automata-intro ;;
+  *) echo "Usage: automata-bg loop | still | toggle | intro" >&2; exit 1 ;;
+esac
+
+[[ $want == "$resolved" ]] && exit 0
+ln -nsf "$want" "$LINK"
+omarchy-shell -q background set "$want" >/dev/null 2>&1 || true

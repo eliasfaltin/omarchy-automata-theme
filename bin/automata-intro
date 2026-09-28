@@ -1,0 +1,96 @@
+#!/bin/bash
+# Play the Automata theme's one-shot intro for the current background.
+#
+# OWE plays an intro only over a still, and a background change ends it. So
+# the script links the blank first frame, starts the intro, and relinks the
+# real background once playback reaches the last unique frame. Each intro
+# carries a 1 s held tail so that handover always beats end of file, and
+# every intro ends on its still's exact pixels, so the switch is invisible.
+#
+# Usage: automata-intro   (runs at Hyprland start; safe to run by hand)
+
+set -u
+
+VARIANTS="$HOME/.local/share/automata/variants"
+STATE="$HOME/.local/state/omarchy/current"
+LINK="$STATE/background"
+THEME="$STATE/theme"
+LIVE="$THEME/backgrounds"
+RESTORE="$HOME/.local/state/automata/restore"
+
+theme=$(cat "$STATE/theme.name" 2>/dev/null)
+[[ $theme == automata || $theme == automata-light ]] || exit 0
+command -v owe >/dev/null || exit 0
+
+# Pick the layout for the current display before anything is shown.
+automata-aspect apply
+
+link=$(readlink "$LINK" 2>/dev/null)
+# A run that died mid-intro leaves the blank frame linked; recover from it.
+if [[ ${link##*/} == blank.png && -f $RESTORE ]]; then
+  link=$(cat "$RESTORE")
+  ln -nsf "$link" "$LINK"
+  automata-aspect apply
+  link=$(readlink "$LINK")
+fi
+resolved=$(readlink -f "$LINK" 2>/dev/null)
+dir=${resolved%/*}
+name=${resolved##*/}
+stem=${name%.*}
+stem=${stem#loop-}
+
+if [[ $dir == "$VARIANTS"/* ]]; then
+  intro="$dir/intro-$stem.mp4"
+  blank="$dir/blank.png"
+  still="$dir/$stem.png"
+else
+  intro="$THEME/intros/intro-$stem.mp4"
+  blank="$THEME/intros/blank.png"
+  still="$LIVE/$stem.png"
+fi
+[[ -f $intro && -f $blank && -f $still ]] || exit 0
+
+mkdir -p "${RESTORE%/*}"
+printf '%s\n' "$link" >"$RESTORE"
+
+show() {
+  ln -nsf "$1" "$LINK"
+  omarchy-shell -q background setInstant "$1" >/dev/null 2>&1 || true
+}
+
+restore() {
+  show "$still"
+  if [[ $(readlink -f "$link") != "$still" ]]; then
+    # OWE crossfades from the outgoing still into the loop's first frame,
+    # which is the same image, so the loop starts without a visible cut.
+    sleep 0.8
+    ln -nsf "$link" "$LINK"
+  fi
+  rm -f "$RESTORE"
+}
+trap restore EXIT
+
+show "$blank"
+
+# Wait for the daemon to load the blank still (it may still be starting) and
+# for any renderer left over from a video to exit before the intro loads.
+for _ in $(seq 150); do
+  owe status 2>/dev/null | jq -e --arg p "$blank" \
+    '.source_path == $p and .engine == "shell" and .render_alive == false' >/dev/null && break
+  sleep 0.1
+done
+
+# Start the intro, then hand over at the end of the unique frames.
+hold=1.0
+duration=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$intro")
+end=$(awk -v d="$duration" -v h="$hold" 'BEGIN { printf "%.3f", d - h - 0.017 }')
+owe raw "$(jq -cn --arg p "$intro" '{cmd: "intro", path: $p}')" |
+  jq -e '.status == "ok"' >/dev/null || exit 0
+
+deadline=$((SECONDS + 25))
+while ((SECONDS < deadline)); do
+  owe raw '{"cmd":"intro-status"}' | jq -e '.running' >/dev/null || break
+  pos=$(owe render-status 2>/dev/null | jq -r '.time_pos // -1')
+  awk -v p="$pos" -v e="$end" 'BEGIN { exit !(p >= e) }' && break
+  sleep 0.04
+done

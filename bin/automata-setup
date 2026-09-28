@@ -1,0 +1,70 @@
+#!/bin/bash
+# One-time setup for the Automata themes, after `omarchy theme install`.
+#
+# Omarchy runs no code from an installed theme, so the extras live here:
+#   - installs automata-intro, automata-aspect and automata-bg to ~/.local/bin
+#   - adds a theme-set hook and two Hyprland autostart entries, so the intro
+#     plays at login and the layout follows the display
+#   - downloads the 3:2 renders (about 480 MB) for 3:2 and 16:10 screens
+#
+# Usage: automata-setup [--no-3x2] [--force]
+
+set -euo pipefail
+
+REPO="eliasfaltin/omarchy-automata-theme"
+TAG="${AUTOMATA_MEDIA_TAG:-media-v1}"
+HERE=$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)
+VARIANTS="$HOME/.local/share/automata/variants"
+BIN="$HOME/.local/bin"
+HOOKS="$HOME/.config/omarchy/hooks/theme-set.d"
+AUTOSTART="$HOME/.config/hypr/autostart.lua"
+WANT_3X2=1
+FORCE=0
+for arg in "$@"; do
+  case $arg in
+    --no-3x2) WANT_3X2=0 ;;
+    --force) FORCE=1 ;;
+    *) echo "Usage: automata-setup [--no-3x2] [--force]" >&2; exit 1 ;;
+  esac
+done
+
+for cmd in jq socat ffprobe hyprctl curl tar; do
+  command -v "$cmd" >/dev/null || { echo "automata-setup: '$cmd' is required" >&2; exit 1; }
+done
+command -v owe >/dev/null || echo "automata-setup: install OWE for loops and intros: omarchy pkg add owe" >&2
+
+echo "==> Scripts"
+mkdir -p "$BIN" "$HOOKS"
+install -m 755 "$HERE"/bin/automata-{intro,aspect,bg} "$BIN/"
+install -m 755 "$HERE/hooks/theme-set.d/20-automata-aspect" "$HOOKS/"
+
+echo "==> Autostart"
+if [[ -f $AUTOSTART ]] && ! grep -q automata-intro "$AUTOSTART"; then
+  cat >>"$AUTOSTART" <<'LUA'
+
+-- Automata themes: play the background's one-shot intro through OWE, and keep
+-- the background layout (16:9 or 3:2) matched to the main display. Both
+-- scripts do nothing unless an Automata theme is active.
+o.exec_on_start(os.getenv("HOME") .. "/.local/bin/automata-intro")
+o.exec_on_start(os.getenv("HOME") .. "/.local/bin/automata-aspect watch")
+LUA
+  echo "    added to $AUTOSTART"
+else
+  echo "    already present"
+fi
+
+if ((WANT_3X2)); then
+  echo "==> 3:2 renders"
+  if ((FORCE == 0)) && [[ -f $VARIANTS/3x2/blank.png && -f $VARIANTS/light-3x2/blank.png ]]; then
+    echo "    already present"
+  else
+    mkdir -p "$VARIANTS"
+    curl -fL --progress-bar "https://github.com/$REPO/releases/download/$TAG/automata-3x2.tar" |
+      tar -x -C "$VARIANTS"
+  fi
+fi
+
+pkill -f '^/bin/bash .*/automata-aspect watch$' 2>/dev/null || true
+setsid -f "$BIN/automata-aspect" watch >/dev/null 2>&1
+"$BIN/automata-aspect" apply
+echo "Done."
