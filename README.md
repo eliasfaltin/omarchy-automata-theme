@@ -3,7 +3,8 @@
 Two [Omarchy](https://omarchy.org/) themes, dark (this repo) and
 [light](https://github.com/eliasfaltin/omarchy-automata-light-theme), with six
 generated backgrounds. Each background is an automaton you can watch: a
-cellular automaton, a clock escapement, Conway's Game of Life. Every one
+cellular automaton, a clock escapement, Conway's Game of Life, the ash a
+random Life soup leaves behind. Every one
 ships as a still, a seamless loop, and a one-shot intro that plays at login.
 
 | Automata (dark) | Automata Light |
@@ -39,22 +40,22 @@ small WebP clips of the loops; the real files are 3840x2160 (16:9) and
 | 3 | ![Life loop](media/loop-3-life-dark.webp) | **Life.** A Gosper glider gun feeds an eater beside a catalogue of oscillators and still lifes. The universe repeats every 30 generations. 15 s. |
 | 4 | ![Cyclic loop](media/loop-4-cyclic-dark.webp) | **Cyclic.** Griffeath's cyclic cellular automaton (8 states, radius 2, threshold 3). Noise organises into spiral waves that repeat every 8 generations. No text. 8 s. |
 | 5 | ![Gears loop](media/loop-5-gears-dark.webp) | **Gears.** A lattice of large and small gears; every neighbour pair meshes. No text. 30 s. |
-| 6 | ![Lattice loop](media/loop-6-lattice-dark.webp) | **Lattice.** Pulsars and pentadecathlons from the Game of Life, tiled so they never interact. No text. 10 s. |
+| 6 | ![Ash loop](media/loop-6-ash-dark.webp) | **Ash.** A random Game of Life soup, run until only its ash is left: blocks, beehives, boats and blinkers, scattered in clusters. Oscillators are drawn brighter than the debris. No text. 8 s. |
 
 Light versions of all six ship with Automata Light. Stills:
 
 | | | |
 | --- | --- | --- |
 | ![](media/still-1-rule-110-light.jpg) | ![](media/still-2-escapement-light.jpg) | ![](media/still-3-life-light.jpg) |
-| ![](media/still-4-cyclic-light.jpg) | ![](media/still-5-gears-light.jpg) | ![](media/still-6-lattice-light.jpg) |
+| ![](media/still-4-cyclic-light.jpg) | ![](media/still-5-gears-light.jpg) | ![](media/still-6-ash-light.jpg) |
 
 ### Intros
 
 At login, the current background builds itself before it settles:
 
-| Rule 110 | Cyclic |
-| --- | --- |
-| ![Rule 110 intro](media/intro-1-rule-110-dark.webp) | ![Cyclic intro](media/intro-4-cyclic-dark.webp) |
+| Rule 110 | Cyclic | Ash |
+| --- | --- | --- |
+| ![Rule 110 intro](media/intro-1-rule-110-dark.webp) | ![Cyclic intro](media/intro-4-cyclic-dark.webp) | ![Ash intro](media/intro-6-ash-dark.webp) |
 
 The still, the last intro frame and the first loop frame are the same image,
 pixel for pixel. The handover between them has no visible cut.
@@ -137,7 +138,8 @@ python3 rule110.py preview 3.0 intro                            # one frame to s
 Every loop is exact, not cross-faded:
 
 - the gear trains turn a whole number of spoke periods per loop;
-- the Game of Life patterns are periodic;
+- the Game of Life patterns are periodic, and the ash is simulated until the
+  whole board repeats;
 - the cyclic automaton is simulated until it repeats.
 
 ## License
